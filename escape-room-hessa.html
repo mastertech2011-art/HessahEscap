@@ -1,0 +1,280 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>اهربي من المتجر</title>
+<meta name="description" content="غرفة هروب تعليمية: افتحي أربعة أقفال بحل ألغاز مراحل إنشاء تطبيقات الهواتف الذكية — التقنية الرقمية ٣">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Readex+Pro:wght@500;600;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600&family=JetBrains+Mono:wght@700&display=swap">
+<style>
+/* Layout: a locked room after hours (deliberate single dark theme). Four padlocks across the top, the current puzzle below, a dial lock at the bottom of each puzzle. */
+:root{
+  color-scheme:dark;
+  --room:#0f1218; --wall:#171b24; --panel:#1e2430; --ink:#eef1f6; --muted:#9aa3b5; --line:#2e3646;
+  --brass:#e2b04a; --brass-dk:#9c7524; --exit:#3ddc84; --alarm:#ff5d6c;
+  --s1:#4cc472; --s2:#ffaa33; --s3:#4cb2ef; --s4:#c86bcf;
+  --display:"Readex Pro","IBM Plex Sans Arabic",Tahoma,sans-serif;
+  --body:"IBM Plex Sans Arabic",Tahoma,"Segoe UI",sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;min-height:100vh;color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.7;
+  background:radial-gradient(90% 60% at 50% 0%,#232a3a 0%,var(--room) 60%) fixed,var(--room);
+  padding:max(18px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) max(40px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left))}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--brass);outline-offset:2px}
+.wrap{max-width:720px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+
+.top{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.brand{font-family:var(--display);font-weight:700;font-size:20px;display:flex;gap:10px;align-items:center}
+.exit-sign{background:var(--exit);color:#06210f;font-family:var(--display);font-weight:700;font-size:12px;border-radius:6px;padding:1px 8px;letter-spacing:.04em;box-shadow:0 0 14px rgba(61,220,132,.5)}
+.clock{font-family:var(--mono);font-size:22px;color:var(--brass);font-variant-numeric:tabular-nums;direction:ltr}
+.course{font-size:12.5px;color:var(--muted)}
+
+/* padlock row */
+.locks{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.lk{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:12px;font-weight:600;color:var(--muted);text-align:center}
+.lk svg{width:44px;height:52px}
+.lk .shackle{fill:none;stroke:var(--line);stroke-width:5;transition:transform .5s}
+.lk .body{fill:var(--panel);stroke:var(--line);stroke-width:2}
+.lk.now .body{stroke:var(--c)}
+.lk.now{color:var(--c)}
+.lk.open .shackle{transform:translate(-10px,-6px) rotate(-25deg);transform-origin:34px 22px;stroke:var(--c)}
+.lk.open .body{fill:var(--c);stroke:var(--c)}
+.lk.open{color:var(--c)}
+
+.card{background:var(--wall);border:1px solid var(--line);border-radius:20px;padding:22px 20px;display:flex;flex-direction:column;gap:16px}
+h1{font-family:var(--display);font-size:clamp(30px,8vw,46px);line-height:1.2;margin:0;text-wrap:balance}
+h1 span{color:var(--brass)}
+h2{font-family:var(--display);font-size:clamp(20px,5.4vw,25px);line-height:1.4;margin:0;text-wrap:balance}
+.lead{margin:0;color:var(--muted)}
+.note{background:#f4ecd6;color:#2b2414;border-radius:6px 16px 6px 16px;padding:14px 16px;transform:rotate(-.6deg);box-shadow:0 6px 18px rgba(0,0,0,.35);font-size:15px}
+.note b{font-family:var(--display)}
+.who{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end}
+.who label{display:flex;flex-direction:column;gap:3px;font-size:13px;color:var(--muted);flex:1;min-width:170px}
+.field{width:100%;background:var(--panel);border:1.5px solid var(--line);border-radius:12px;padding:10px 12px;font-size:16px}
+.field:focus{outline:none;border-color:var(--brass)}
+.btn{border:0;border-radius:14px;padding:13px 24px;font-weight:700;font-size:17px;background:var(--brass);color:#1d1606}
+.btn:hover{filter:brightness(1.08)}
+.btn.ghost{background:transparent;color:var(--muted);border:1.5px solid var(--line);font-size:14px;padding:8px 14px;font-weight:600}
+
+.door-tag{display:flex;align-items:center;gap:10px;font-family:var(--display);font-weight:600;color:var(--c)}
+.door-tag b{width:32px;height:32px;border-radius:50%;background:var(--c);color:var(--room);display:grid;place-items:center}
+
+/* puzzle pieces */
+.tiles{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.tile{background:var(--panel);border:1.5px solid var(--line);border-radius:14px;padding:12px 14px;display:flex;justify-content:space-between;align-items:center;gap:10px;font-weight:600}
+.tile .num{font-family:var(--mono);font-size:24px;color:var(--brass);flex:none}
+.prog{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.prog .tile{flex-direction:column;justify-content:center;text-align:center;gap:2px;padding:12px 6px;direction:ltr}
+.prog .tile span:first-child{font-size:14px}
+.screen{width:230px;margin:0 auto;border:10px solid #000;border-radius:34px;background:#fff;color:#222;padding:30px 12px 14px;display:flex;flex-direction:column;gap:10px;position:relative;font-size:13px}
+.screen::before{content:"";position:absolute;top:8px;left:50%;width:56px;height:10px;border-radius:6px;background:#000;transform:translateX(-50%)}
+.el{position:relative;border:1.5px dashed transparent;border-radius:8px;padding:3px}
+.badge{position:absolute;top:-9px;left:-9px;min-width:26px;height:26px;border-radius:13px;background:#1e2430;color:var(--brass);font-family:var(--mono);font-size:13px;display:grid;place-items:center;padding:0 5px;border:2px solid var(--brass)}
+.screen h4{margin:0;text-align:center;font-family:var(--display);color:#1683c3}
+.broken{height:64px;border:1.5px dashed #bbb;border-radius:8px;display:grid;place-items:center;color:#999;font-size:12px}
+.inp{border:1.5px solid #ccc;border-radius:8px;padding:7px;color:#999}
+.lbl{font-weight:600;font-size:12px}
+.pale{background:#f3f3f3;color:#e3e3e3;border-radius:10px;padding:9px;text-align:center;font-weight:700}
+.okbtn{background:#1683c3;color:#fff;border-radius:10px;padding:9px;text-align:center;font-weight:700}
+.sentences{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:10px;counter-reset:s}
+.sentences li{background:var(--panel);border-radius:12px;padding:10px 14px;counter-increment:s;display:flex;gap:10px}
+.sentences li::before{content:counter(s);font-family:var(--mono);color:var(--brass)}
+.blank{display:inline-block;min-width:70px;border-bottom:2px dashed var(--muted);margin:0 4px}
+.bank{display:flex;flex-wrap:wrap;gap:8px}
+.bank span{background:var(--panel);border:1.5px solid var(--line);border-radius:999px;padding:5px 12px;font-weight:600;display:flex;gap:8px;align-items:center}
+.bank b{font-family:var(--mono);color:var(--brass)}
+.clue{font-size:14px;color:var(--muted);margin:0}
+.clue b{color:var(--brass)}
+
+/* dial lock */
+.dial-wrap{background:linear-gradient(180deg,#2a2f3b,#1b1f28);border:1px solid var(--line);border-radius:18px;padding:16px;display:flex;flex-direction:column;align-items:center;gap:12px}
+.dial-title{font-size:13px;color:var(--muted);font-weight:600}
+.dials{display:flex;gap:8px;direction:ltr}
+.dial{display:flex;flex-direction:column;align-items:center;gap:4px}
+.dial button{width:52px;height:30px;border-radius:8px;border:1px solid var(--line);background:var(--panel);font-size:14px;line-height:1}
+.dial .d{width:52px;height:64px;border-radius:10px;background:linear-gradient(180deg,#d8b45a,var(--brass) 45%,var(--brass-dk));color:#1d1606;font-family:var(--mono);font-size:34px;display:grid;place-items:center;box-shadow:inset 0 -6px 10px rgba(0,0,0,.25),inset 0 4px 6px rgba(255,255,255,.3)}
+.slotn{font-size:12px;color:var(--muted);font-weight:700}
+.dial-wrap.shake{animation:shake .4s}
+.dial-wrap.win .d{background:linear-gradient(180deg,#7ff0b0,var(--exit));}
+@keyframes shake{20%,60%{transform:translateX(-8px)}40%,80%{transform:translateX(8px)}}
+.dial-row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+.msg{min-height:1.6em;text-align:center;font-weight:600;font-size:15px;margin:0}
+.msg.no{color:var(--alarm)} .msg.ok{color:var(--exit)}
+.hintbox{background:var(--panel);border-right:3px solid var(--brass);border-radius:10px;padding:10px 12px;font-size:14px}
+
+/* escaped */
+.escaped{align-items:center;text-align:center}
+.big-door{width:120px;height:150px;border-radius:12px 12px 0 0;background:var(--exit);position:relative;box-shadow:0 0 60px rgba(61,220,132,.35)}
+.big-door::after{content:"";position:absolute;top:70px;left:16px;width:12px;height:12px;border-radius:50%;background:#06210f}
+.time-big{font-family:var(--mono);font-size:56px;color:var(--brass);line-height:1;direction:ltr}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;width:100%}
+.stats div{background:var(--panel);border-radius:14px;padding:10px}
+.stats b{display:block;font-family:var(--display);font-size:22px}
+.stats span{font-size:12px;color:var(--muted)}
+.learned{width:100%;text-align:start;display:flex;flex-direction:column;gap:6px}
+.learned div{background:var(--panel);border-radius:12px;padding:8px 12px;font-size:14px;border-right:4px solid var(--c)}
+.snap{color:var(--brass);font-family:var(--display);font-weight:600;margin:0}
+
+@media (max-width:480px){.tiles{grid-template-columns:1fr}.prog{grid-template-columns:repeat(2,1fr)}.dial .d{width:46px;height:58px;font-size:30px}.dial button{width:46px}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div class="brand"><span class="exit-sign">EXIT</span>اهربي من المتجر</div>
+    <div class="clock" id="clock" hidden>00:00</div>
+  </div>
+
+  <div class="locks" id="locks" hidden></div>
+
+  <!-- intro -->
+  <section class="card" id="intro">
+    <h1>أُغلق <span>متجر التطبيقات</span> وأنتِ بداخله!</h1>
+    <div class="note"><b>رسالة من حارس المتجر:</b> الأبواب الأربعة مقفلة بأقفال سرّية. كل قفل يحرس مرحلة من مراحل إنشاء التطبيق، ولن يُفتح إلا لمن يفهم تلك المرحلة. حلّي اللغز، استخرجي الرمز، وأديري أرقام القفل.</div>
+    <p class="lead">العداد يبدأ عند دخولك. الأسرع خروجًا في الشعبة هي بطلة التحدي!</p>
+    <div class="who">
+      <label for="nm">اسمك<input class="field" id="nm" autocomplete="off" placeholder="مثال: لمى"></label>
+      <label for="cl" style="max-width:120px;min-width:90px">الشعبة<input class="field" id="cl" autocomplete="off" placeholder="٣/٢"></label>
+      <button class="btn" id="startBtn">ادخلي الغرفة</button>
+    </div>
+    <p class="course" style="margin:0">التقنية الرقمية ٣ · الوحدة الثالثة · أ. حصة العتيبي</p>
+  </section>
+
+  <!-- puzzles -->
+  <section class="card" id="puz" hidden>
+    <div class="door-tag" id="doorTag"></div>
+    <h2 id="pTitle"></h2>
+    <div id="pBody" style="display:flex;flex-direction:column;gap:14px"></div>
+    <div class="dial-wrap" id="dialWrap">
+      <div class="dial-title" id="dialTitle"></div>
+      <div class="dials" id="dials"></div>
+      <div class="dial-row"><button class="btn" id="tryBtn">افتحي القفل</button><button class="btn ghost" id="hintBtn">تلميح</button></div>
+      <p class="msg" id="msg" aria-live="polite"></p>
+      <div class="hintbox" id="hintBox" hidden></div>
+    </div>
+  </section>
+
+  <!-- escaped -->
+  <section class="card escaped" id="out" hidden>
+    <div class="big-door" aria-hidden="true"></div>
+    <h2>نجوتِ يا <span id="oName" style="color:var(--exit)"></span>!</h2>
+    <div class="time-big" id="oTime"></div>
+    <div class="stats" id="oStats"></div>
+    <div class="learned">
+      <div style="--c:var(--s1)"><b>التخطيط والتصميم:</b> الفكرة والهدف والفئة المستهدفة، ومخطط يدوي للواجهات.</div>
+      <div style="--c:var(--s2)"><b>التطوير:</b> تنفيذ التصميم ببرنامج تطوير مثل MIT App Inventor.</div>
+      <div style="--c:var(--s3)"><b>الاختبار:</b> اكتشاف مشاكل البرمجة والتصميم ومعالجتها وإضافة اللمسات الأخيرة.</div>
+      <div style="--c:var(--s4)"><b>النشر والتسويق:</b> اعتماد التطبيق وتحميله في متجر التطبيقات.</div>
+    </div>
+    <p class="snap">صوّري الشاشة وأرسليها لمعلمتك</p>
+    <button class="btn" id="again">العبي مرة أخرى</button>
+  </section>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const ar=n=>String(n).replace(/\d/g,d=>"٠١٢٣٤٥٦٧٨٩"[d]);
+const shuffle=a=>a.map(v=>[Math.random(),v]).sort((x,y)=>x[0]-y[0]).map(v=>v[1]);
+
+const DOORS=[
+ {name:"باب التخطيط",c:"--s1",title:"رتّبي مراحل إنشاء التطبيق",code:"",
+  build(){ // random digits per stage each play
+   const stages=["التخطيط والتصميم","التطوير (التنفيذ)","الاختبار","النشر والتسويق"];
+   const digs=shuffle([1,2,3,4,5,6,7,8,9]).slice(0,4);this.code=digs.join("");
+   const order=shuffle([0,1,2,3]);
+   return `<p class="clue">على الجدار أربع لوحات، تحت كل مرحلة رقم. <b>رتّبي المراحل كما تحدث فعلًا عند إنشاء تطبيق</b>، فتكون أرقامها بالترتيب هي رمز القفل.</p>
+    <div class="tiles">${order.map(i=>`<div class="tile"><span>${stages[i]}</span><span class="num">${digs[i]}</span></div>`).join("")}</div>
+    <p class="clue">رقم المرحلة الأولى يوضع في الخانة ١ من القفل، والثانية في الخانة ٢، وهكذا.</p>`},
+  hints:["المرحلة الأولى دائمًا قبل أي برمجة: نحدد الفكرة ونرسم المخطط.","لا يمكن اختبار تطبيق لم يُبنَ بعد، ولا نشر تطبيق لم يُختبر."]},
+ {name:"باب التطوير",c:"--s2",title:"صندوق أدوات المطوّرة",code:"",
+  build(){
+   const P=[["Microsoft Word",0],["MIT App Inventor",1],["Excel",0],["Thunkable",1],["Photoshop",0],["Kodular",1],["PowerPoint",0],["AppyBuilder",1]];
+   const digs=P.map(()=>Math.floor(Math.random()*10));
+   while(digs[1]===0)digs[1]=Math.floor(Math.random()*9)+1;
+   this.code=P.map((p,i)=>p[1]?digs[i]:"").join("");
+   return `<p class="clue">في الصندوق ثمانية برامج، لكل منها رقم. <b>القفل لا يقبل إلا أرقام برامج تطوير تطبيقات الهواتف الذكية</b>، بنفس ترتيب ظهورها في الصندوق.</p>
+    <div class="prog">${P.map((p,i)=>`<div class="tile"><span>${p[0]}</span><span class="num">${digs[i]}</span></div>`).join("")}</div>
+    <p class="clue">اقرئي الصندوق كما تقرئين أي نص عربي: من اليمين، صفًا بعد صف. أول برنامج تطوير تجدينه يوضع رقمه في الخانة ١ من القفل.</p>`},
+  hints:["البرامج التي نكتب بها مستندات أو نعدّل بها صورًا ليست برامج تطوير.","برامج التطوير هنا أربعة، ومنها البرنامج الذي يعمل ببيئة اللبنات مثل سكراتش."]},
+ {name:"باب الاختبار",c:"--s3",title:"اختبري تطبيق «موعدي» قبل نشره",code:"",
+  build(){
+   const els=[[1,`<h4>موعدي مع المرشده</h4>`],[1,`<div class="broken">⚠ الصورة لم تظهر</div>`],[0,`<div class="lbl">اسم الطالبة</div><div class="inp">اكتبي اسمك</div>`],[1,`<div class="inp">٠٥xxxxxxxx</div>`],[1,`<div class="pale">احجزي موعدًا</div>`],[0,`<div class="okbtn">مواعيدي السابقة</div>`]];
+   let nums=els.map(()=>Math.floor(Math.random()*20)+3),sum=els.reduce((s,e,i)=>s+(e[0]?nums[i]:0),0);
+   this.code=String(sum).padStart(2,"0");
+   return `<p class="clue">أنتِ مختبِرة التطبيق. على كل جزء من الشاشة رقم. <b>اجمعي أرقام الأجزاء التي فيها مشكلة فقط</b>، والناتج هو الرمز (اكتبيه كما تكتبين أي عدد). في الشاشة أربع مشاكل.</p>
+    <div class="screen">${els.map((e,i)=>`<div class="el"><span class="badge">${nums[i]}</span>${e[1]}</div>`).join("")}</div>`},
+  hints:["اقرئي العنوان حرفًا حرفًا، وابحثي عن صورة لا تظهر.","مربع نص بلا تسمية مشكلة، والزر الباهت الذي لا يُقرأ مشكلة. الأجزاء الواضحة سليمة."]},
+ {name:"باب النشر",c:"--s4",title:"البوابة الأخيرة: أكملي الجمل",code:"",
+  build(){
+   const S=[["بعد الاختبار نعتمد التطبيق ونحمّله في","التطبيقات.","متجر"],["في مرحلة التخطيط نحدد الفكرة والهدف والفئة","","المستهدفة"],["برنامج MIT App Inventor يعتمد على بيئة","بدل كتابة المقطع البرمجي.","اللبنات"],["في مرحلة الاختبار نعالج المشاكل ثم نضيف","الأخيرة.","اللمسات"]];
+   const words=["متجر","المستهدفة","اللبنات","اللمسات","المتصفح","الشبكة","الأدوات","الألوان"];
+   const digs=shuffle([1,2,3,4,5,6,7,8,9]).slice(0,8);const map={};words.forEach((w,i)=>map[w]=digs[i]);
+   this.code=S.map(s=>map[s[2]]).join("");
+   return `<p class="clue">أكملي كل جملة بكلمة من بنك الكلمات. <b>أرقام الكلمات الصحيحة بترتيب الجمل هي رمز البوابة:</b> كلمة الجملة ١ في الخانة ١، وهكذا.</p>
+    <ol class="sentences">${S.map(s=>`<li><span>${s[0]} <span class="blank"></span> ${s[1]}</span></li>`).join("")}</ol>
+    <div class="bank">${shuffle(words).map(w=>`<span>${w}<b>${map[w]}</b></span>`).join("")}</div>`},
+  hints:["الجملة الأولى عن المكان الذي نحمّل فيه التطبيقات على الجوال.","الكلمات «المتصفح» و«الشبكة» و«الأدوات» و«الألوان» للتمويه."]}
+];
+
+let di=0,dig=[],t0=0,tick=null,wrong=0,hintsUsed=0,hintLvl=0,doorWrong=0;
+function fmt(s){return String(Math.floor(s/60)).padStart(2,"0")+":"+String(s%60).padStart(2,"0")}
+function locks(){
+  $("locks").innerHTML=DOORS.map((d,k)=>`<div class="lk ${k<di?"open":k===di?"now":""}" style="--c:var(${d.c})">
+    <svg viewBox="0 0 68 80" aria-hidden="true"><path class="shackle" d="M18 36V24a16 16 0 0 1 32 0v12"/><rect class="body" x="8" y="34" width="52" height="40" rx="8"/></svg>${d.name}</div>`).join("");
+}
+function start(){
+  di=0;wrong=0;hintsUsed=0;
+  $("intro").hidden=true;$("out").hidden=true;$("puz").hidden=false;$("locks").hidden=false;$("clock").hidden=false;
+  t0=Date.now();clearInterval(tick);tick=setInterval(()=>$("clock").textContent=fmt(Math.floor((Date.now()-t0)/1000)),500);
+  door();
+}
+function door(){
+  const D=DOORS[di];hintLvl=0;doorWrong=0;
+  $("puz").style.setProperty("--c",`var(${D.c})`);
+  $("doorTag").innerHTML=`<b>${ar(di+1)}</b>${D.name}`;
+  $("pTitle").textContent=D.title;
+  $("pBody").innerHTML=D.build();
+  dig=Array(D.code.length).fill(0);
+  $("dialTitle").textContent=`قفل من ${ar(D.code.length)} أرقام`;
+  $("msg").textContent="";$("msg").className="msg";$("hintBox").hidden=true;
+  $("dialWrap").classList.remove("win");
+  drawDials();locks();window.scrollTo({top:0,behavior:"smooth"});
+}
+function drawDials(){
+  $("dials").innerHTML=dig.map((v,i)=>`<div class="dial"><button data-i="${i}" data-d="1" aria-label="زيدي الخانة ${i+1}">▲</button><div class="d" aria-live="off">${v}</div><button data-i="${i}" data-d="-1" aria-label="أنقصي الخانة ${i+1}">▼</button><span class="slotn">${ar(i+1)}</span></div>`).join("");
+  $("dials").querySelectorAll("button").forEach(b=>b.onclick=()=>{const i=+b.dataset.i;dig[i]=(dig[i]+ +b.dataset.d+10)%10;b.parentElement.querySelector(".d").textContent=dig[i]});
+}
+$("tryBtn").onclick=()=>{
+  const D=DOORS[di],w=$("dialWrap");
+  if(dig.join("")===D.code){
+    w.classList.add("win");$("msg").className="msg ok";$("msg").textContent="طَق! انفتح القفل";
+    di++;locks();
+    setTimeout(()=>{if(di<DOORS.length)door();else escape()},1100);
+  }else{
+    wrong++;doorWrong++;w.classList.remove("shake");void w.offsetWidth;w.classList.add("shake");
+    $("msg").className="msg no";$("msg").textContent=doorWrong>=2?"الرمز خاطئ. جرّبي التلميح":"الرمز خاطئ، راجعي اللغز";
+  }
+};
+$("hintBtn").onclick=()=>{const H=DOORS[di].hints;if(hintLvl<H.length){hintsUsed++;hintLvl++}
+  $("hintBox").hidden=false;$("hintBox").innerHTML=H.slice(0,hintLvl).map(h=>`• ${h}`).join("<br>")};
+function escape(){
+  clearInterval(tick);const s=Math.floor((Date.now()-t0)/1000);
+  $("puz").hidden=true;$("out").hidden=false;$("clock").textContent=fmt(s);
+  const nm=$("nm").value.trim(),cl=$("cl").value.trim();
+  $("oName").textContent=(nm||"المغامِرة")+(cl?` (${cl})`:"");
+  $("oTime").textContent=fmt(s);
+  $("oStats").innerHTML=`<div><b>${ar(4)}/٤</b><span>أقفال فُتحت</span></div><div><b>${ar(wrong)}</b><span>محاولات خاطئة</span></div><div><b>${ar(hintsUsed)}</b><span>تلميحات</span></div>`;
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+$("startBtn").onclick=start;$("again").onclick=start;
+</script>
+</body>
+</html>

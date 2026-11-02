@@ -1,0 +1,360 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>عيادة التطبيقات</title>
+<meta name="description" content="نشاط تفاعلي: شخّصي التطبيقات الفاشلة واكتشفي أي مرحلة من مراحل إنشاء التطبيق أُهملت — التقنية الرقمية ٣">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Readex+Pro:wght@500;600;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600&display=swap">
+<style>
+/* Layout: clinic "patient file" — case header, phone on one side, diagnosis steps on the other; stacks on phones */
+:root{
+  color-scheme:light;
+  --bg:#eef4f3; --paper:#ffffff; --ink:#132724; --muted:#5d716d; --line:#d6e3e0; --soft:#f4f8f7;
+  --teal:#0f8a7c; --teal-soft:#dff2ee; --red:#d43d4f; --red-soft:#fcebed; --gold:#e7a300;
+  --s1:#2e9a4e; --s2:#e28a00; --s3:#1683c3; --s4:#8d2b91;
+  --display:"Readex Pro","IBM Plex Sans Arabic",Tahoma,sans-serif;
+  --body:"IBM Plex Sans Arabic",Tahoma,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root{
+  color-scheme:dark;
+  --bg:#0e1716; --paper:#172322; --ink:#e8f2f0; --muted:#94aaa6; --line:#2a3b39; --soft:#1d2b29;
+  --teal:#3cc4b3; --teal-soft:#16332f; --red:#ff7584; --red-soft:#3a1c21; --gold:#ffc340;
+  --s1:#4cc472; --s2:#ffaa33; --s3:#4cb2ef; --s4:#c86bcf}}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.7;
+  padding:max(20px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) max(40px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left))}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--s3);outline-offset:2px}
+.wrap{max-width:860px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+
+/* top bar */
+.top{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:10px;font-family:var(--display);font-weight:700;font-size:20px}
+.cross{width:34px;height:34px;border-radius:10px;background:var(--teal);position:relative;flex:none}
+.cross::before,.cross::after{content:"";position:absolute;background:#fff;border-radius:2px}
+.cross::before{width:16px;height:5px;top:14.5px;left:9px}
+.cross::after{width:5px;height:16px;top:9px;left:14.5px}
+.course{font-size:13px;color:var(--muted)}
+.queue{display:flex;gap:6px}
+.queue i{width:30px;height:8px;border-radius:4px;background:var(--line)}
+.queue i.now{background:var(--teal)}
+.queue i.done{background:var(--s1)}
+
+/* cards */
+.card{background:var(--paper);border:1px solid var(--line);border-radius:20px;padding:24px 22px}
+h1{font-family:var(--display);font-size:clamp(28px,7vw,42px);line-height:1.25;margin:0 0 8px;text-wrap:balance}
+h1 span{color:var(--teal)}
+h2{font-family:var(--display);font-size:clamp(20px,5vw,26px);line-height:1.35;margin:0;text-wrap:balance}
+.lead{margin:0;color:var(--muted);max-width:60ch}
+.intro{display:grid;grid-template-columns:1fr auto;gap:24px;align-items:center}
+.intro-steps{list-style:none;padding:0;margin:18px 0;display:flex;flex-direction:column;gap:10px}
+.intro-steps li{display:flex;gap:12px;align-items:center;font-weight:500}
+.intro-steps b{flex:none;width:30px;height:30px;border-radius:50%;background:var(--teal-soft);color:var(--teal);display:grid;place-items:center;font-family:var(--display)}
+.name-row{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end}
+.name-row label{display:flex;flex-direction:column;gap:3px;font-size:13px;color:var(--muted);font-weight:500;flex:1;min-width:180px}
+.field{width:100%;border:1.5px solid var(--line);background:var(--soft);border-radius:12px;padding:10px 12px;font-size:16px}
+.field:focus{outline:none;border-color:var(--teal)}
+.btn{border:0;border-radius:12px;padding:12px 24px;font-weight:600;font-size:16px;background:var(--teal);color:#fff}
+.btn:hover{filter:brightness(1.07)}
+.waiting{display:grid;grid-template-columns:repeat(2,64px);gap:10px}
+.waiting div{height:64px;border-radius:16px;display:grid;place-items:center;font-family:var(--display);font-size:26px;color:#fff;position:relative}
+.waiting div::after{content:"!";position:absolute;top:-6px;left:-6px;width:22px;height:22px;border-radius:50%;background:var(--red);font-size:14px;display:grid;place-items:center}
+
+/* case */
+.case-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+.file-no{font-size:13px;color:var(--muted);font-weight:600}
+.status{font-size:13px;font-weight:700;border-radius:999px;padding:3px 12px;background:var(--red-soft);color:var(--red)}
+.status.ok{background:var(--teal-soft);color:var(--teal)}
+.case{display:grid;grid-template-columns:240px 1fr;gap:26px;align-items:start}
+.left{display:flex;flex-direction:column;gap:12px;align-items:center}
+.stars{font-size:22px;letter-spacing:3px;color:var(--line);direction:ltr}
+.stars .on{color:var(--gold)}
+.reviews{display:flex;flex-direction:column;gap:8px;width:100%}
+.rev{background:var(--soft);border-radius:12px;padding:8px 12px;font-size:13.5px}
+.rev small{display:block;color:var(--muted);font-size:11.5px}
+.right{display:flex;flex-direction:column;gap:16px;min-width:0}
+.story{margin:0;background:var(--soft);border-radius:14px;padding:12px 14px}
+.step{display:flex;flex-direction:column;gap:10px}
+.step h3{font-family:var(--display);font-size:17px;margin:0;display:flex;align-items:center;gap:8px}
+.step h3 b{width:26px;height:26px;border-radius:50%;background:var(--teal);color:#fff;display:grid;place-items:center;font-size:14px}
+.opts{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.opts.one{grid-template-columns:1fr}
+.opt{border:2px solid var(--line);background:var(--paper);border-radius:12px;padding:11px 12px;font-weight:600;text-align:start;display:flex;gap:10px;align-items:center}
+.opt{flex-wrap:nowrap}.opt>span:last-child{min-width:0}
+.opt .dot{flex:none;width:12px;height:12px;border-radius:50%;background:var(--c,var(--teal))}
+.opt:hover:not(:disabled){border-color:var(--c,var(--teal))}
+.opt:disabled{cursor:default;opacity:.55}
+.opt.correct{border-color:var(--teal);background:var(--teal-soft);opacity:1}
+.opt.wrong{border-color:var(--red);background:var(--red-soft);opacity:1;animation:shake .35s}
+@keyframes shake{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+.fb{border-radius:12px;padding:10px 14px;font-size:15px}
+.fb.ok{background:var(--teal-soft);color:var(--teal)}
+.fb.no{background:var(--red-soft);color:var(--red)}
+.next-row{display:flex;justify-content:flex-end}
+
+/* phone mock (always light inside — it's a screenshot of an app) */
+.phone{width:220px;height:420px;border:10px solid #1b1b22;border-radius:36px;background:#fff;color:#222;position:relative;overflow:hidden;
+  transition:transform .5s;box-shadow:0 12px 30px rgba(0,0,0,.12)}
+.phone::before{content:"";position:absolute;top:8px;left:50%;width:60px;height:12px;border-radius:8px;background:#1b1b22;transform:translateX(-50%);z-index:3}
+.phone.heal{animation:heal .7s}
+@keyframes heal{40%{transform:scale(.92) rotate(-2deg)}70%{transform:scale(1.04)}}
+.scr{position:absolute;inset:0;padding:30px 12px 12px;display:flex;flex-direction:column;gap:8px;font-size:12px}
+.apphead{font-family:var(--display);font-weight:700;font-size:15px;text-align:center}
+/* A cluttered */
+.clutter{display:grid;grid-template-columns:repeat(4,1fr);gap:4px}
+.clutter span{font-size:8px;padding:5px 1px;border-radius:4px;color:#fff;text-align:center;line-height:1.2}
+.marq{background:#ffeb3b;color:#d00;font-size:9px;font-weight:700;padding:3px;text-align:center;transform:rotate(-2deg)}
+.clean-search{border:1.5px solid #ddd;border-radius:10px;padding:7px 10px;color:#999}
+.cats{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.cats div{border-radius:12px;padding:16px 6px;text-align:center;font-weight:700;font-size:12px}
+.mbtn{border-radius:12px;padding:10px;text-align:center;font-weight:700;color:#fff;background:#0f8a7c}
+/* B no response */
+.hero{height:110px;border-radius:14px;background:linear-gradient(135deg,#7b5cff,#e74fa8);color:#fff;display:grid;place-items:center;font-family:var(--display);font-size:18px;font-weight:700}
+.dead{position:relative}
+.dead .mbtn{background:#7b5cff}
+.tap{position:absolute;inset:-4px;border:2px dashed #d43d4f;border-radius:14px}
+.nores{font-size:11px;color:#d43d4f;text-align:center;font-weight:700}
+.hw{display:flex;flex-direction:column;gap:6px}
+.hw div{display:flex;gap:8px;align-items:center;background:#f5f3ff;border-radius:10px;padding:7px 9px;font-weight:600}
+.hw i{width:16px;height:16px;border-radius:5px;border:2px solid #7b5cff;flex:none}
+.hw i.c{background:#7b5cff}
+/* C crash */
+.crashbg{filter:blur(1.5px);opacity:.6;display:flex;flex-direction:column;gap:8px}
+.dialog{position:absolute;left:14px;right:14px;top:40%;background:#fff;border-radius:14px;box-shadow:0 8px 30px rgba(0,0,0,.25);padding:14px;text-align:center;z-index:2}
+.dialog b{display:block;color:#d43d4f;margin-bottom:4px}
+.ring{width:120px;height:120px;border-radius:50%;margin:6px auto;display:grid;place-items:center;font-family:var(--display);font-weight:700;font-size:20px;
+  background:conic-gradient(#e74f4f 0 72%,#f1f1f1 0);position:relative}
+.ring::before{content:"";position:absolute;inset:12px;border-radius:50%;background:#fff}
+.ring span{position:relative}
+.kv{display:flex;justify-content:space-between;background:#fafafa;border-radius:8px;padding:6px 9px}
+/* D store */
+.lst{display:flex;gap:10px;align-items:center}
+.ic{width:56px;height:56px;border-radius:14px;flex:none;display:grid;place-items:center;color:#fff;font-family:var(--display);font-size:24px;font-weight:700}
+.lst b{display:block;font-size:14px}
+.lst small{color:#888}
+.get{align-self:flex-start;border-radius:999px;padding:4px 18px;background:#1683c3;color:#fff;font-weight:700}
+.shots{display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px}
+.shots div{height:96px;border-radius:8px}
+.sdesc{color:#555;font-size:11.5px}
+
+/* final */
+.report{display:flex;flex-direction:column;gap:16px}
+.score-big{font-family:var(--display);font-size:64px;font-weight:700;color:var(--teal);line-height:1;font-variant-numeric:tabular-nums}
+.score-big small{font-size:22px;color:var(--muted)}
+.rgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.rc{border:1px solid var(--line);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:2px}
+.rc .an{font-family:var(--display);font-weight:700}
+.rc .dg{font-size:13px;font-weight:600;color:var(--c)}
+.rc .st{color:var(--gold);letter-spacing:2px;direction:ltr;text-align:right}
+.lesson{background:var(--teal-soft);border-radius:14px;padding:14px;margin:0}
+.lesson b{color:var(--teal)}
+.cyc{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-weight:700;font-size:14px;margin-top:6px}
+.cyc span{border-radius:999px;padding:3px 12px;color:#fff;background:var(--c)}
+.snap{text-align:center;font-family:var(--display);font-weight:600;color:var(--teal);margin:0}
+
+@media (max-width:640px){
+  .case{grid-template-columns:1fr}
+  .intro{grid-template-columns:1fr}
+  .waiting{display:none}
+  .opts{grid-template-columns:1fr}
+  .rgrid{grid-template-columns:1fr}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div class="brand"><span class="cross" aria-hidden="true"></span>عيادة التطبيقات</div>
+    <div class="queue" id="queue" aria-label="التقدم"></div>
+  </div>
+
+  <!-- intro -->
+  <section class="card" id="intro">
+    <div class="intro">
+      <div>
+        <h1>أنتِ اليوم <span>طبيبة التطبيقات</span></h1>
+        <p class="lead">وصلت إلى العيادة أربعة تطبيقات مريضة، والمستخدمون غير راضين عنها. كل تطبيق منها أهمل مرحلة من مراحل إنشائه.</p>
+        <ol class="intro-steps">
+          <li><b>١</b>افحصي التطبيق واقرئي آراء المستخدمين</li>
+          <li><b>٢</b>شخّصي: أي مرحلة أُهملت؟</li>
+          <li><b>٣</b>اختاري العلاج، وشاهدي التطبيق يتعافى</li>
+        </ol>
+        <div class="name-row">
+          <label for="docName">اسمك<input class="field" id="docName" placeholder="مثال: د. ريم" autocomplete="off"></label>
+          <label for="docClass" style="max-width:120px;min-width:90px">الشعبة<input class="field" id="docClass" placeholder="٣/٢" autocomplete="off"></label>
+          <button class="btn" id="startBtn">افتحي العيادة</button>
+        </div>
+      </div>
+      <div class="waiting" aria-hidden="true">
+        <div style="background:#e8710a">س</div><div style="background:#7b5cff">و</div>
+        <div style="background:#e74f4f">ن</div><div style="background:#9aa3a8">م</div>
+      </div>
+    </div>
+    <p class="course" style="margin:18px 0 0">التقنية الرقمية ٣ · الوحدة الثالثة: تطبيقات الهواتف الذكية · أ. حصة العتيبي</p>
+  </section>
+
+  <!-- case -->
+  <section class="card" id="caseCard" hidden>
+    <div class="case-head">
+      <div><div class="file-no" id="fileNo"></div><h2 id="caseName"></h2></div>
+      <span class="status" id="status">حالة حرجة</span>
+    </div>
+    <div class="case">
+      <div class="left">
+        <div class="phone" id="phone"><div class="scr" id="scr"></div></div>
+        <div class="stars" id="stars" aria-label="التقييم"></div>
+        <div class="reviews" id="reviews"></div>
+      </div>
+      <div class="right">
+        <p class="story" id="story"></p>
+        <div class="step" id="diag">
+          <h3><b>١</b>التشخيص: أي مرحلة أُهملت؟</h3>
+          <div class="opts" id="diagOpts"></div>
+          <div id="diagFb"></div>
+        </div>
+        <div class="step" id="treat" hidden>
+          <h3><b>٢</b>العلاج: ماذا يجب أن يفعل فريق التطبيق؟</h3>
+          <div class="opts one" id="treatOpts"></div>
+          <div id="treatFb"></div>
+        </div>
+        <div class="next-row" id="nextRow" hidden><button class="btn" id="nextBtn">الحالة التالية</button></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- report -->
+  <section class="card report" id="report" hidden>
+    <div class="file-no">التقنية الرقمية ٣ · أ. حصة العتيبي</div>
+    <h2>تقرير <span id="rName" style="color:var(--teal)">الطبيبة</span></h2>
+    <div class="score-big" id="rScore"></div>
+    <p id="rMsg" style="margin:0;font-weight:600"></p>
+    <div class="rgrid" id="rGrid"></div>
+    <p class="lesson"><b>الخلاصة:</b> نجاح التطبيق يحتاج المراحل الأربع كلها بالترتيب، وإهمال أي مرحلة منها يُفشل التطبيق مهما كانت الفكرة رائعة.
+      <span class="cyc"><span style="--c:var(--s1)">التخطيط والتصميم</span>←<span style="--c:var(--s2)">التطوير</span>←<span style="--c:var(--s3)">الاختبار</span>←<span style="--c:var(--s4)">النشر والتسويق</span></span></p>
+    <p class="snap">صوّري التقرير وأرسليه لمعلمتك</p>
+    <div class="next-row"><button class="btn" id="again">أعيدي النشاط</button></div>
+  </section>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const ar=n=>String(n).replace(/\d/g,d=>"٠١٢٣٤٥٦٧٨٩"[d]);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const shuffle=a=>a.map(v=>[Math.random(),v]).sort((x,y)=>x[0]-y[0]).map(v=>v[1]);
+
+const STAGES=[["التخطيط والتصميم","--s1"],["التطوير (التنفيذ)","--s2"],["الاختبار","--s3"],["النشر والتسويق","--s4"]];
+const btnColors=["#e8710a","#d43d4f","#1683c3","#2e9a4e","#8d2b91","#e7a300","#555","#0f8a7c"];
+const clutterLabels=["عروض","جديد!","سلة","حسابي","تخفيض","اتصل","مفضلة","خصم٪","تتبع","مساعدة","فروع","هدايا"];
+
+const CASES=[
+ {name:"سلّتي",sub:"تطبيق تسوّق",stage:0,
+  story:"فريق «سلّتي» بدأ البرمجة مباشرة دون فكرة واضحة. أضافوا كل ميزة خطرت لهم، ولم يحددوا لمن صُمّم التطبيق.",
+  reviews:[["لا أعرف من أين أبدأ، أزرار كثيرة جدًا!","مستخدمة"],["لمن هذا التطبيق أصلًا؟ للكبار أم للصغار؟","مستخدم"]],
+  before:()=>`<div class="apphead">سلّتي</div><div class="marq">عرض!!! خصم!!! اضغطي هنا!!!</div><div class="clutter">${clutterLabels.map((l,i)=>`<span style="background:${btnColors[i%8]}">${l}</span>`).join("")}</div><div class="clutter">${clutterLabels.slice(0,8).map((l,i)=>`<span style="background:${btnColors[(i+3)%8]}">${l}</span>`).join("")}</div><div class="marq" style="transform:rotate(2deg)">حمّلي تطبيقنا الآخر!</div>`,
+  after:()=>`<div class="apphead">سلّتي</div><div class="clean-search">ابحثي عن منتج…</div><div class="cats"><div style="background:#fff1e6;color:#e8710a">ملابس</div><div style="background:#e6f4ff;color:#1683c3">أدوات مدرسية</div><div style="background:#eaf7ee;color:#2e9a4e">هدايا</div><div style="background:#f6ecf7;color:#8d2b91">عروض</div></div><div style="flex:1"></div><div class="mbtn">سلة المشتريات</div>`,
+  treats:[["تحديد الفكرة والهدف والفئة المستهدفة، ثم إنشاء مخطط يدوي بسيط للواجهات قبل البرمجة",1],["إضافة أزرار أكثر ليجد كل مستخدم ما يريد",0],["نشر إعلانات أكثر عن التطبيق",0]],
+  why:"غياب التخطيط جعل الواجهة عشوائية. المخطط اليدوي يوضح واجهات المستخدم وكيفية ارتباطها ببعضها."},
+ {name:"واجباتي",sub:"تطبيق تنظيم الواجبات",stage:1,
+  story:"صممت الفرقة واجهة رائعة على الورق، ورفعتها كصور فقط. لم تُبرمَج الأزرار في أي برنامج تطوير.",
+  reviews:[["شكله جميل جدًا… لكن لا شيء يعمل!","مستخدمة"],["أضغط زر «ابدئي» ولا يحدث أي شيء","مستخدمة"]],
+  before:()=>`<div class="apphead">واجباتي</div><div class="hero">نظّمي يومك ✨</div><div style="color:#888;text-align:center">كل واجباتك في مكان واحد</div><div style="flex:1"></div><div class="dead"><div class="mbtn">ابدئي</div><div class="tap"></div></div><div class="nores">⛔ الزر لا يستجيب</div>`,
+  after:()=>`<div class="apphead">واجباتي</div><div class="hw"><div><i class="c"></i>حل تمارين الرياضيات</div><div><i class="c"></i>قراءة درس الأحياء</div><div><i></i>مشروع التقنية الرقمية</div><div><i></i>مراجعة الكيمياء</div></div><div style="flex:1"></div><div class="mbtn" style="background:#7b5cff">+ إضافة واجب</div>`,
+  treats:[["إعادة رسم التصميم بألوان أجمل",0],["استخدام أحد برامج تطوير التطبيقات مثل MIT App Inventor لتنفيذ التصميم وبرمجة الأزرار",1],["نشر التطبيق في متجر آخر",0]],
+  why:"التصميم وحده لا يصنع تطبيقًا. مرحلة التطوير تحوّل التصميم إلى تطبيق يعمل باستخدام برنامج تطوير."},
+ {name:"نبض",sub:"تطبيق خطوات المشي",stage:2,
+  story:"أنهت الفرقة البرمجة ليلة الإطلاق، ونشرت التطبيق فورًا دون تجربته على أي جهاز.",
+  reviews:[["يتوقف التطبيق كل مرة أفتح صفحة الخطوات","مستخدمة"],["مكتوب «خطوات اليوم: NaN» ما معناها؟!","مستخدم"]],
+  before:()=>`<div class="crashbg"><div class="apphead">نبظ</div><div class="ring"><span>NaN</span></div><div class="kv"><span>خطوات اليوم</span><span>NaN</span></div><div class="kv"><span>السعرات</span><span>undefined</span></div></div><div class="dialog"><b>توقف «نبض» عن العمل</b>إغلاق التطبيق</div>`,
+  after:()=>`<div class="apphead">نبض</div><div class="ring" style="background:conic-gradient(#2e9a4e 0 78%,#f1f1f1 0)"><span>٦٬٢٤٠</span></div><div class="kv"><span>خطوات اليوم</span><span>٦٬٢٤٠</span></div><div class="kv"><span>السعرات</span><span>٢٥٠</span></div><div class="kv"><span>الهدف</span><span>٨٬٠٠٠</span></div>`,
+  treats:[["اختبار التطبيق ومعالجة مشاكل البرمجة والتصميم، ثم إضافة اللمسات الأخيرة قبل النشر",1],["إضافة ميزات جديدة بسرعة لإرضاء المستخدمين",0],["تغيير اسم التطبيق",0]],
+  why:"النشر بلا اختبار يوصل الأخطاء للمستخدمين. لاحظي حتى الخطأ الإملائي في العنوان «نبظ»!"},
+ {name:"مكتبتي",sub:"تطبيق استعارة الكتب",stage:3,
+  story:"تطبيق مخطط له جيدًا، يعمل بلا أخطاء، والمستخدمات اللواتي جرّبنه أحببنه. لكن الفريق رفعه للمتجر بلا أيقونة ولا وصف ولم يخبر أحدًا عنه.",
+  reviews:[["تطبيق ممتاز! كيف لم أسمع عنه من قبل؟","مستخدمة"],["وجدته بالصدفة… لا يوجد وصف يشرح فائدته","مستخدمة"]],
+  before:()=>`<div class="lst"><div class="ic" style="background:#c4c4c4">?</div><div><b>app_final_v2</b><small>بلا تصنيف</small></div></div><div class="get" style="background:#bbb">تحميل</div><div class="sdesc">لا يوجد وصف.</div><div style="color:#888">٣ تحميلات فقط</div><div class="shots"><div style="background:#eee"></div><div style="background:#eee"></div><div style="background:#eee"></div></div>`,
+  after:()=>`<div class="lst"><div class="ic" style="background:#8d2b91">م</div><div><b>مكتبتي</b><small>كتب ومراجع</small></div></div><div class="get">تحميل</div><div class="sdesc">استعيري كتابك من مكتبة المدرسة بضغطة، واعرفي موعد إرجاعه بتنبيه.</div><div style="color:#2e9a4e;font-weight:700">+١٢ ألف تحميل</div><div class="shots"><div style="background:#f6ecf7"></div><div style="background:#e6f4ff"></div><div style="background:#fff1e6"></div></div>`,
+  treats:[["إعادة برمجة التطبيق من البداية",0],["إعادة اختبار التطبيق مرة أخرى",0],["اعتماد التطبيق في المتجر باسم وأيقونة ووصف واضح، والتسويق له بين الطالبات",1]],
+  why:"التطبيق الناجح يحتاج من يعرف به. النشر والتسويق يوصلانه لفئته المستهدفة."}
+];
+
+let order=[],ci=0,score=0,results=[],diagTries=0,treatTries=0;
+
+function queue(){ $("queue").innerHTML=CASES.map((_,k)=>`<i class="${k<ci?"done":k===ci&&!$("caseCard").hidden?"now":""}"></i>`).join(""); }
+function stars(n){ $("stars").innerHTML=[1,2,3,4,5].map(k=>`<span class="${k<=n?"on":""}">★</span>`).join(""); $("stars").setAttribute("aria-label",`التقييم ${n} من 5`); }
+
+function start(){
+  order=shuffle([0,1,2,3]);ci=0;score=0;results=[];
+  $("intro").hidden=true;$("report").hidden=true;$("caseCard").hidden=false;showCase();
+}
+function showCase(){
+  const C=CASES[order[ci]];diagTries=0;treatTries=0;
+  $("fileNo").textContent=`ملف رقم ${ar(ci+1)} من ٤ · ${C.sub}`;
+  $("caseName").textContent=`تطبيق «${C.name}»`;
+  $("status").textContent="حالة حرجة";$("status").classList.remove("ok");
+  $("scr").innerHTML=C.before();stars(C.stage===3?4:1);
+  $("reviews").innerHTML=C.reviews.map(([t,u])=>`<div class="rev">«${t}»<small>${u} · ${C.stage===3?"★★★★★":"★☆☆☆☆"}</small></div>`).join("");
+  $("story").textContent=C.story;
+  $("diagOpts").innerHTML=STAGES.map(([n,c],k)=>`<button class="opt" data-k="${k}" style="--c:var(${c})"><span class="dot"></span><span>${n}</span></button>`).join("");
+  $("diagFb").innerHTML="";$("treat").hidden=true;$("nextRow").hidden=true;
+  $("diagOpts").querySelectorAll(".opt").forEach(b=>b.onclick=()=>diagnose(C,+b.dataset.k,b));
+  queue();window.scrollTo({top:0,behavior:"smooth"});
+}
+const HINTS=["لو كان التخطيط هو المشكلة لكانت الواجهة عشوائية والفئة المستهدفة غير واضحة.","لو كان التطوير هو المشكلة لكان التصميم موجودًا لكن لا يعمل.","لو كان الاختبار هو المشكلة لظهرت أعطال وأخطاء عند الاستخدام.","لو كان النشر والتسويق هو المشكلة لكان التطبيق جيدًا لكن لا أحد يعرفه."];
+function diagnose(C,k,b){
+  diagTries++;
+  if(k===C.stage){
+    $("diagOpts").querySelectorAll(".opt").forEach(x=>{x.disabled=true});b.classList.add("correct");
+    if(diagTries===1)score++;
+    $("diagFb").innerHTML=`<div class="fb ok"><b>تشخيص صحيح!</b> أُهملت مرحلة ${STAGES[k][0]}.</div>`;
+    $("treat").hidden=false;
+    $("treatOpts").innerHTML=shuffle(C.treats.map((t,i)=>i)).map(i=>`<button class="opt" data-i="${i}">${C.treats[i][0]}</button>`).join("");
+    $("treatFb").innerHTML="";
+    $("treatOpts").querySelectorAll(".opt").forEach(x=>x.onclick=()=>treat(C,+x.dataset.i,x));
+    $("treat").scrollIntoView({behavior:"smooth",block:"nearest"});
+  }else{
+    b.disabled=true;b.classList.add("wrong");
+    $("diagFb").innerHTML=`<div class="fb no"><b>ليس هذا التشخيص.</b> ${HINTS[k]} أعيدي فحص الأعراض.</div>`;
+  }
+}
+function treat(C,i,b){
+  treatTries++;
+  if(C.treats[i][1]){
+    $("treatOpts").querySelectorAll(".opt").forEach(x=>x.disabled=true);b.classList.add("correct");
+    if(treatTries===1)score++;
+    $("treatFb").innerHTML=`<div class="fb ok"><b>تعافى التطبيق!</b> ${C.why}</div>`;
+    const ph=$("phone");ph.classList.remove("heal");void ph.offsetWidth;ph.classList.add("heal");
+    setTimeout(()=>{$("scr").innerHTML=C.after();stars(5);
+      $("reviews").innerHTML=`<div class="rev">«أصبح التطبيق رائعًا، شكرًا للفريق!»<small>مستخدمة · ★★★★★</small></div>`;},280);
+    $("status").textContent="تعافى ✓";$("status").classList.add("ok");
+    results.push({name:C.name,stage:C.stage,first:diagTries===1&&treatTries===1});
+    $("nextBtn").textContent=ci===CASES.length-1?"اعرضي تقريري":"الحالة التالية";
+    $("nextRow").hidden=false;
+  }else{
+    b.disabled=true;b.classList.add("wrong");
+    $("treatFb").innerHTML=`<div class="fb no">هذا العلاج لا يعالج سبب المرض. ركّزي على المرحلة التي أُهملت.</div>`;
+  }
+}
+$("nextBtn").onclick=()=>{ci++; if(ci<CASES.length)showCase(); else report();};
+
+function report(){
+  $("caseCard").hidden=true;$("report").hidden=false;queue();
+  const nm=$("docName").value.trim(),cl=$("docClass").value.trim();
+  $("rName").textContent=(nm||"الطبيبة")+(cl?` · ${cl}`:"");
+  $("rScore").innerHTML=`${ar(score)}<small> / ٨ قرارات صحيحة من أول محاولة</small>`;
+  $("rMsg").textContent=score>=7?"طبيبة تطبيقات ماهرة! شخّصتِ الحالات بدقة.":score>=5?"أداء جيد، راجعي الحالات التي احتاجت أكثر من محاولة.":"بداية جيدة، أعيدي النشاط لتصبحي أسرع في التشخيص.";
+  $("rGrid").innerHTML=results.map(r=>`<div class="rc" style="--c:var(${STAGES[r.stage][1]})"><span class="an">«${esc(r.name)}»</span><span class="dg">أُهملت: ${STAGES[r.stage][0]}</span><span class="st">★★★★★</span><span style="font-size:12px;color:var(--muted)">${r.first?"شُخّص من أول محاولة":"احتاج أكثر من محاولة"}</span></div>`).join("");
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+$("startBtn").onclick=start;
+$("again").onclick=()=>{$("report").hidden=true;start();};
+queue();
+</script>
+</body>
+</html>
